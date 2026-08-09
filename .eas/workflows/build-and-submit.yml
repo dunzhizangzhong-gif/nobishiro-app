@@ -1,0 +1,34 @@
+# mainへのpushで自動ビルド→ストアへ自動提出(TestFlight / 内部テスト)
+# 事前準備: eas build:configure 済み、App Store Connect APIキーをEASに登録済み
+name: Build and Submit
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build_ios:
+    name: Build iOS
+    type: build
+    params:
+      platform: ios
+      profile: production
+  submit_ios:
+    name: Submit iOS (TestFlight)
+    needs: [build_ios]
+    type: submit
+    params:
+      platform: ios
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+  build_android:
+    name: Build Android
+    type: build
+    params:
+      platform: android
+      profile: production
+  submit_android:
+    name: Submit Android (内部テスト)
+    needs: [build_android]
+    type: submit
+    params:
+      platform: android
+      build_id: ${{ needs.build_android.outputs.build_id }}

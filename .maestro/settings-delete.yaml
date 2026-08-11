@@ -1,0 +1,20 @@
+# AC-020: 設定画面からのデータ削除(確認ダイアログの承認/キャンセル)
+appId: com.nobishiro.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-age-yes"
+- tapOn:
+    id: "home-settings-link"
+- assertVisible:
+    id: "settings-delete-button"
+- tapOn:
+    id: "settings-delete-button"
+- tapOn: "削除する"
+- assertVisible:
+    id: "settings-delete-success"

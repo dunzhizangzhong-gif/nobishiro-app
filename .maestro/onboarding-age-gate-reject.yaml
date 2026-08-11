@@ -1,0 +1,19 @@
+# AC-013 18歳以上確認ゲート(拒否パス)
+# 「18歳未満」を選択した場合、利用できない旨の画面が表示され、
+# ホームを含む全機能へ遷移できないことを確認する
+appId: com.nobishiro.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-next"
+- assertVisible:
+    id: "onboarding-age-no"
+- tapOn:
+    id: "onboarding-age-no"
+- assertVisible:
+    id: "onboarding-ineligible"
+- assertNotVisible:
+    id: "home-placeholder"

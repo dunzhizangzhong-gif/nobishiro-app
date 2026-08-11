@@ -1,0 +1,27 @@
+# AC-018 失敗時: フォトライブラリ権限が「拒否」の場合、写真選択(S-3)は実行させず、
+# 「写真へのアクセスが許可されていません」の説明画面と「設定を開く」ボタンを表示することを確認する。
+# 「設定を開く」タップで実際にiOS設定アプリの本アプリページが開くことまではspec.md記載どおり
+# 実機手動で確認する(release-checklist.md T17参照)。ここではボタンの存在とタップ可能性のみを検証する。
+#
+# launchAppのpermissions指定でOS権限状態を「拒否」に固定する。この仕組み自体、本セッションでは
+# 未実行のため(実機/シミュレータ/Maestro CLI無し)、値の受理可否・実際の画面遷移は未検証。
+appId: com.nobishiro.app
+---
+- launchApp:
+    clearState: true
+    permissions:
+      photos: "deny"
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-age-yes"
+- tapOn:
+    id: "home-cta-photo"
+- assertVisible:
+    id: "photo-permission-denied"
+- assertVisible:
+    id: "photo-permission-open-settings"
+- tapOn:
+    id: "photo-permission-open-settings"

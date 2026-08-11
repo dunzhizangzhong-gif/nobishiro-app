@@ -1,0 +1,24 @@
+# AC-007 失敗時: 0文字では送信ボタンが無効化され文字数の説明が表示される
+# AC-019: 拒否状態でもテキストタブへ切り替えて利用できる
+appId: com.nobishiro.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-age-yes"
+- tapOn:
+    id: "home-cta-reply"
+- assertVisible:
+    id: "reply-input-validation-message"
+- assertVisible:
+    id: "reply-input-submit-text"
+- tapOn:
+    id: "reply-input-tab-screenshot"
+- tapOn:
+    id: "reply-input-tab-text"
+- assertVisible:
+    id: "reply-input-text-field"

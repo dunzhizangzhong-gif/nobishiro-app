@@ -1,0 +1,16 @@
+# AC-013 18歳以上確認ゲート(承認パス)
+# 「18歳以上」を選択した場合のみホームへ進めることを確認する
+appId: com.nobishiro.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-next"
+- assertVisible:
+    id: "onboarding-age-yes"
+- tapOn:
+    id: "onboarding-age-yes"
+- assertVisible:
+    id: "home-placeholder"

@@ -1,0 +1,22 @@
+# AC-001 失敗時(b): 0枚選択時は送信ボタンが無効化され「1〜5枚を選択してください」が表示される
+# (許可済み権限が前提。権限状態ごとの分岐はphoto-permission-denied.yaml/photo-permission-first-request.yamlで別途検証)
+appId: com.nobishiro.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-age-yes"
+- tapOn:
+    id: "home-cta-photo"
+- assertVisible:
+    id: "photo-select-validation-message"
+- assertVisible:
+    id: "photo-select-submit"
+- tapOn:
+    id: "photo-select-submit"
+- assertVisible:
+    id: "photo-select-validation-message"

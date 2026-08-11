@@ -1,0 +1,18 @@
+# AC-005 参考イメージの表示
+# S-3〜S-5を経由せず、ディープリンクで直接S-6へ遷移して検証する
+# (OS標準フォトピッカーの自動操作は環境依存で脆いため、S-6単体の検証に限定)
+appId: com.nobishiro.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-age-yes"
+- openLink: "nobishiro://photo-assessment/reference/light"
+- assertVisible:
+    id: "reference-image-placeholder-light-1"
+- assertVisible:
+    id: "reference-caption-light-1"

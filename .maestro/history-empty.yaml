@@ -1,0 +1,21 @@
+# DL-009: 判定・返信履歴がいずれも0件の場合の空状態ビュー(S-9)
+appId: com.nobishiro.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-age-yes"
+- tapOn:
+    id: "home-history-link"
+- assertVisible:
+    id: "history-empty"
+- assertVisible:
+    id: "history-empty-cta"
+- tapOn:
+    id: "history-empty-cta"
+- assertVisible:
+    id: "home-placeholder"

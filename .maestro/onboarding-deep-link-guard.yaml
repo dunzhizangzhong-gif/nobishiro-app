@@ -1,0 +1,11 @@
+# AC-013 失敗時: 確認未完了のままディープリンク等でホームに到達しようとした場合も
+# 年齢確認画面へ強制的に戻されることを確認する
+appId: com.nobishiro.app
+---
+- launchApp:
+    clearState: true
+- assertNotVisible:
+    id: "home-placeholder"
+- openLink: "nobishiro://"
+- assertNotVisible:
+    id: "home-placeholder"

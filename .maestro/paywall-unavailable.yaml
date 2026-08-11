@@ -1,0 +1,19 @@
+# AC-010: RevenueCat APIキー未設定時(release-checklist.md参照、STEP4時点では未発行)は
+# ペイウォールが「現在ご利用いただけません」を表示することを確認する。
+# APIキー発行後は無料枠超過経路からの到達(ホームCTA→ペイウォール)や購入・リストアの
+# 実機確認(Sandbox)を別途行う必要がある。
+appId: com.nobishiro.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-age-yes"
+- openLink: "nobishiro://paywall"
+- assertVisible:
+    id: "paywall-unavailable-message"
+- assertVisible:
+    id: "paywall-close"

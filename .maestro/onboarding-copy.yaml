@@ -1,0 +1,12 @@
+# AC-021 オンボーディングでの差別化コピー表示
+# 価値説明ページを閲覧すると、2つの差別化コピー(testID固定)が表示されることを確認する
+appId: com.nobishiro.app
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: "onboarding-copy-reasoning"
+- tapOn:
+    id: "onboarding-next"
+- assertVisible:
+    id: "onboarding-copy-trust"

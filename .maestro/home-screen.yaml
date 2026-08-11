@@ -1,0 +1,22 @@
+# S-2 ホーム画面: 2大CTA・残り回数表示・履歴導線が揃っていることを確認する
+# (個別のAC番号は持たないが、spec.md 8章S-2の画面定義に対応)
+appId: com.nobishiro.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-age-yes"
+- assertVisible:
+    id: "home-placeholder"
+- assertVisible:
+    id: "home-quota-summary"
+- assertVisible:
+    id: "home-cta-photo"
+- assertVisible:
+    id: "home-cta-reply"
+- assertVisible:
+    id: "home-history-link"

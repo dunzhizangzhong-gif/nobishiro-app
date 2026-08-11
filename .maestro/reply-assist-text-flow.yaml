@@ -1,0 +1,23 @@
+# AC-006/AC-007 テキスト入力経路(送信〜処理中表示まで)
+# nobishiro-proxy(別リポジトリ)が未稼働のため、実際の返信案3件表示・コピー ボタンの
+# 検証(AC-006のThen節)はプロキシ稼働後に別途確認が必要。ここではOS標準ピッカーを
+# 使わずに到達できる範囲(S-7送信→S-8処理中表示)のみを検証する。
+appId: com.nobishiro.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-age-yes"
+- tapOn:
+    id: "home-cta-reply"
+- tapOn:
+    id: "reply-input-text-field"
+- inputText: "今度ご飯行きませんか?"
+- tapOn:
+    id: "reply-input-submit-text"
+- assertVisible:
+    id: "reply-result-processing"

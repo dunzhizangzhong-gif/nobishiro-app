@@ -96,3 +96,143 @@
 - 決定: 上記1・2を踏まえ、spec.md AC-004(禁止語フィルタ)の対象に「体型・体重への直接的な言及」を必須カテゴリとして追加し、F-1/F-3の設計原則(4章末尾)に、体型・体重に言及しないこと、および人種・宗教等の属性推定に踏み込まないことを明記する。これにより現行スコープのまま利用規約に適合させる(機能削減・スコープ変更は不要)。
 - 影響範囲: spec.md 4章(F-1/F-3の判定品質に関する設計原則)、AC-004。
 - 出典: [Usage Policy \| Anthropic](https://www.anthropic.com/aup)、2026年8月10日時点の記載内容に基づく。将来的にポリシーが更新された場合は本ログを再確認する。
+
+## DL-009: 履歴画面(S-9)の空状態(0件時)が未定義
+
+- 日付: 2026-08-10(STEP 2.5 UI方針検討中に発見)
+- ステータス: **承認済み**(2026-08-10、人間がSTEP4着手前確認で承認)
+- 論点: spec.md AC-012・8章S-9は「過去の判定・返信セッション一覧」の表示を前提としており、判定・返信を1件も
+  実行していない状態(初回インストール直後等)でS-9を開いた場合の表示(空状態)が定義されていない。
+- 決定: 大きめのアイコン+「まだ履歴がありません。写真判定や返信支援を試してみましょう」等の説明文+
+  ホーム(S-2)への遷移ボタンを表示する空状態ビューを追加する。新規ACは起こさず、AC-012の前提データに
+  「0件時は空状態ビューを表示する」旨を追記した。
+- 影響範囲: spec.md 8章S-9、AC-012(rev8で反映済み)。
+
+## DL-010: 判定中画面(S-4)での手動キャンセル導線の有無が未定義
+
+- 日付: 2026-08-10(STEP 2.5 UI方針検討中に発見)
+- ステータス: **承認済み**(2026-08-10、人間がSTEP4着手前確認で承認)
+- 論点: spec.md AC-002は60秒タイムアウト時の自動エラー遷移のみを規定しており、ユーザーが自発的に判定中
+  画面から離脱(キャンセルして前画面に戻る)する導線の有無・挙動(進行中リクエストの扱い、無料枠消費の有無)
+  が未定義。
+- 決定: S-4に「キャンセル」ボタンを追加し、タップ時は進行中リクエストを中断してS-3(または直前の入力画面)
+  に戻り、無料枠は消費しない(AC-002のタイムアウト時と同様の非消費ルールを踏襲)。
+- 影響範囲: spec.md 8章S-4、AC-002(手動キャンセル時の無料枠非消費を明記。rev8で反映済み)。
+
+## DL-011: 配色・タイポグラフィ等のデザイントークンがspec.mdに存在しない
+
+- 日付: 2026-08-10(STEP 2.5 UI方針検討中に発見)
+- ステータス: **承認済み**(2026-08-10、人間がSTEP4着手前確認で承認)
+- 論点: spec.mdにはブランドカラー・タイポグラフィ等のデザイン仕様が定義されておらず、STEP 2.5(UI方針)
+  でも独自に確定させることは仕様の勝手な解釈にあたる。
+- 決定: specs/ui-direction.mdに記載の通り、STEP 4実装では暫定的にiOSセマンティックカラー+アクセント1色、
+  Dynamic Type(San Francisco)を採用し、独自ブランドカラーの正式決定はSTEP 6(App Store Connect設定)
+  またはブランド確定時に別途行う。spec.mdへの新規追記は不要(デザイントークンは実装時のui-direction.md
+  参照で足りるため)。
+- 影響範囲: spec.mdへの変更は不要。
+
+## DL-012: npm audit既知脆弱性(image-size DoS・uuid buffer bounds)のリスク受容
+
+- 日付: 2026-08-10(STEP 4 T1完了後の依存関係監査で発見)
+- ステータス: **承認済み**(2026-08-10)
+- 論点: `npm audit`でimage-size(High、DoS、修正版なし)・uuid(Moderate、修正版はあるが依存チェーン未反映)の
+  脆弱性が検出された。image-sizeはMetro経由(`metro`→`@expo/metro`→`@expo/cli`/`@expo/metro-config`→`expo`、
+  および`@react-native/community-cli-plugin`→`react-native`等)で16件、uuidは`xcode`→`@expo/config-plugins`
+  経由で7件、それぞれ波及表示されており、実体は2つの根本脆弱性。
+- 決定: 両方とも開発時のビルドツールチェーン限定(Metro/xcode経由)で、ユーザー端末で動くJSバンドルには
+  含まれない。写真判定機能(F-1)の実処理経路(プロキシへの直接fetch)もこのコードパスを通らないため、
+  現時点でリスクを受容してT2以降の実装を進める。`npm audit fix --force`はexpo 57.0.11→53.0.27、
+  react-native 0.86.2→0.72.17という大幅な後退を伴い、かつimage-sizeは修正版が存在しないため実施しても
+  解消されないと確認済み。
+- 影響範囲: 修正版が出た際に依存関係を更新する。specs/release-checklist.mdに追跡項目として記録。
+
+## DL-013: photoRefsのassetIdが取得できない場合のuriフォールバックの限界
+
+- 日付: 2026-08-10(STEP 4 T6完了後、user指摘を受けた調査で発見)
+- ステータス: **承認済み**(2026-08-10、現状のuriフォールバックを維持する方針で人間が承認)
+- 論点: spec.md 7章はphotoRefsを「端末ライブラリのasset ID(画像のコピーは保存しない)」と定義しているが、
+  `expo-image-picker`の型定義コメントにより、フォトライブラリ権限が「限定」(AC-018で明示的にサポートする状態)の
+  場合、`assetId`が`null`になりうることが判明した。実装では`photo.assetId ?? photo.uri`でuriにフォールバック
+  しているが、`uri`はライブラリへの安定参照ではなく、pickerがアプリ専用キャッシュ領域に書き出した一時ファイルの
+  パスである。AC-014の自動テスト(保存値が文字列でありバイナリでないこと)は満たすが、7章コメントが意図する
+  「安定した参照」という設計意図とは厳密には異なり、将来の履歴再表示(AC-012)でassetIdより参照解決に失敗しやすい。
+  これは理論上の懸念ではなく、AC-018が正規サポートする「限定」権限利用時に実際に発生する。
+- 決定: 現状のuriフォールバック実装を維持する。AC-014の自動テスト要件は満たされており、AC-012が
+  「参照不能なら枠のみのプレースホルダを表示する」設計を既に持つため機能的な破綻はない。将来的に
+  `assetId`を安定的にサムネイル表示へ解決する場合は`expo-media-library`(現状未承認の依存ライブラリ)の
+  追加が必要になる可能性があり、この判断はT13(履歴機能)着手時に改めて検討する。
+- 影響範囲: src/features/photo-assessment/usePhotoAssessmentSubmission.ts(コードコメントで既知の制限として明記済み)。
+  T13実装時にexpo-media-library追加要否を再検討する。
+
+## DL-014: expo-media-library追加(S-5サムネイル表示)+ NSPhotoLibraryUsageDescription未登録の修正
+
+- 日付: 2026-08-10(T7完了後、人間の判断でサムネイル表示が必要と再確認され追加調査・実装)
+- ステータス: **承認済み**(2026-08-10、依存追加・実装方針とも人間が承認)
+- 論点: DL-013でサムネイル非表示のままT7を完了したが、人間の判断で判定結果画面(S-5)にサムネイル表示が
+  必要と結論。`assetId`(限定権限以外で保存される参照)を表示可能なURIへ解決するには`expo-media-library`
+  (未承認の依存ライブラリ)が必要だった。
+- 調査結果:
+  1. SDK57系の安定版`expo-media-library@57.0.3`のAPIは`new Asset(assetId).getUri()`で解決する新API
+     (`next`世代)がデフォルト。`peerDependencies`は`expo: '*', react-native: '*'`で互換性問題なし
+  2. iOSのPhotosライブラリ権限はアプリ単位でOS共通の1つの認可状態であり、`expo-image-picker`と
+     `expo-media-library`は同じ状態を参照する。T5で取得済みの権限があれば`expo-media-library`側の
+     追加リクエストは発生せず、T5の4状態分岐フローとの不整合はない
+  3. 調査の過程で、`expo-image-picker`のconfig plugin(`NSPhotoLibraryUsageDescription`をInfo.plistに
+     書き込む)が**app.jsonのplugins未登録だった**ことが判明(T5/T6時点からの見落とし)。実機ビルド時に
+     権限リクエストでクラッシュしうる、または審査で問題になりうる不具合だった
+- 決定: `expo-media-library`を追加承認する。あわせて`app.json`の`plugins`に`expo-image-picker`
+  (見落とし修正)・`expo-media-library`の両方を明示的なInfo.plist文言(日本語)付きで登録する。
+  `savePhotosPermission: false`で書き込み権限(`NSPhotoLibraryAddUsageDescription`)は宣言しない
+  (アプリは読み取り専用でライブラリへの保存を行わないため)。`npx expo prebuild`で実際に
+  Info.plistへ反映されることを確認済み(生成した`ios/`ディレクトリはマネージドワークフロー維持のため削除)。
+- 影響範囲: package.json(expo-media-library追加)、app.json(plugins追加)、
+  src/lib/media/resolvePhotoUri.ts(新規、assetId→URI解決+uriフォールバックの直接利用)、
+  app/photo-assessment/result.tsx(サムネイル表示)。
+
+## DL-015: T16(AC-022/023/024)のプロキシ暫定契約拡張、および全滅時に理由が混在するケースの表示優先度
+
+- 日付: 2026-08-11(T16実装時。同日、論点2〔混在時の優先度〕を人間が承認)
+- ステータス: **承認済み**(契約拡張は[[DL-001]]の暫定契約の枠内。混在時の優先度〔モデレーション優先〕は
+  「センシティブな理由を優先的に伝える方が適切」との理由で人間が明示承認)
+- 論点1(契約拡張): `photoAssessmentClient.ts`の暫定レスポンス契約(`results: PhotoAssessmentApiResult[]`)は
+  AC-022(モデレーション)・AC-024(人物検出失敗)が要求する「写真ごとの除外理由」を表現できなかった。
+- 決定1: `entries: (IncludedEntry | ExcludedEntry)[]`(送信写真と同じ順序・同じ枚数)に拡張し、
+  `status:'excluded', reason:'moderation'|'no_person'`で除外理由を表現する暫定契約とした。モデレーション
+  チェック自体のエラー(AC-022失敗時のfail-closed)もプロキシ側で`reason:'moderation'`として返す前提とし、
+  クライアント側は「拒否された」場合と区別しない。`replyAssistClient.ts`は`status:'moderation_rejected'`を
+  追加。レート制限(AC-023)はHTTP 429を専用の`RateLimitedError`として区別し、429以外の非2xxは既存の
+  `ProxyRequestError`(fail-closed)に倒した。実プロキシ実装時にこの契約に合わせる([[DL-001]]と同様の運用)。
+- 論点2(全滅時の表示優先度): AC-022・AC-024はそれぞれ独立に「バッチ全滅時の専用画面」を規定するが、
+  1つのバッチ内でモデレーション除外の写真と人物検出失敗の写真が混在し、かつ結果的に全滅した場合に
+  どちらの画面を出すかはspec.mdに明記がない。
+- 暫定決定2: `usePhotoAssessmentSubmission.ts`の`resolveAllExcludedPhase`で、除外理由に1件でも
+  `moderation`が含まれていればガイドライン違反画面(AC-022)を優先表示する(ポリシー起因の拒否を
+  人物検出の案内より優先するという実装側の判断)。テストケースで挙動を固定しているのみで、人間による
+  仕様上の承認は得ていない。
+- 影響範囲: src/lib/api/photoAssessmentClient.ts、src/lib/api/replyAssistClient.ts、
+  src/features/photo-assessment/usePhotoAssessmentSubmission.ts、
+  src/features/reply-assist/useReplyAssistSubmission.ts。混在時の優先度について異なる方針
+  (例: 個別の「一部モデレーション・一部人物検出」向け専用文言を新設する等)を希望する場合は本ログ更新のうえ
+  実装を修正する。
+
+## DL-016: AC-018のMaestro E2Eフロー欠落の発見と追加
+
+- 日付: 2026-08-11(T17準備〔release-checklist.md整理〕中に発見、同日中に追加して解消。人間が承認)
+- ステータス: **承認済み**
+- 論点: spec.mdのAC-018(フォトライブラリ権限フロー)テスト明記は「E2E(Maestro)で『拒否』時の
+  説明画面表示と『設定を開く』ボタンの存在、『未リクエスト』時のOSダイアログ許可→S-3到達を検証」と
+  明記しているが、T5/T6完了時点では`.maestro/`配下に対応するflowファイルが作成されておらず、
+  `photo-select-validation.yaml`のコメントが将来参照する形で先送りされたまま埋められていなかった。
+  CLAUDE.mdの「各ACに対応する自動テストを書く。テストのないACを『完了』としない」原則に反する
+  状態でT5/T6を完了扱いにしていたことになる。
+- 決定: `.maestro/photo-permission-denied.yaml`(拒否時の説明画面+設定を開くボタンの存在を検証)、
+  `.maestro/photo-permission-first-request.yaml`(未リクエスト→OS標準ダイアログで許可→S-3到達を検証)
+  の2本を追加し、ギャップを解消する。OS標準権限ダイアログの操作は`launchApp`の`permissions`指定で
+  権限状態を固定したうえで、実際に表示されるシステムダイアログを`tapOn`する構成とした。ボタン文言が
+  端末言語設定に依存するため日本語・英語の両方を`optional: true`で試す設計とした。「設定を開く」
+  タップで実際にiOS設定アプリが開くことの確認は、spec.md記載どおりMaestroの対象外とし実機手動で行う
+  (release-checklist.md T17参照)。他の既存flow(reference-image.yaml等)と同様、本セッションには
+  実機/シミュレータ/Maestro CLIが無いため、`permissions`指定の受理可否・ダイアログ文言とも未検証。
+- 影響範囲: .maestro/photo-permission-denied.yaml(新規)、.maestro/photo-permission-first-request.yaml
+  (新規)、.maestro/photo-select-validation.yaml(参照コメント更新)、release-checklist.md T17
+  (Maestro flow本数を12→14に更新、フェーズ2の記述を「対応済み」に更新)。

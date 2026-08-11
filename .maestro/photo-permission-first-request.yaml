@@ -1,0 +1,33 @@
+# AC-018: フォトライブラリ権限が「未リクエスト」の場合、S-3到達時にOS標準の権限ダイアログが
+# 自動的に表示され(usePhotoLibraryPermission.ts)、「許可」を選ぶとそのままS-3(写真選択画面)に
+# 到達できることを確認する。
+#
+# launchAppのpermissions: "unset"でOS権限状態を「未リクエスト」に固定したうえで、実際に表示される
+# システム標準ダイアログをtapOnで操作する。ボタン文言は端末言語設定に依存するため、日本語・英語の
+# 双方を optional: true で試す(どちらか一方のみ実際にマッチする想定)。
+#
+# 参考イメージ(reference-image.yaml)・返信支援テキストフロー(reply-assist-text-flow.yaml)と同様、
+# OS標準ダイアログの自動操作は端末・OSバージョン・言語設定に依存して壊れやすい。本セッションでは
+# 実機/シミュレータ/Maestro CLIが無いため、permissions指定の受理可否・ダイアログ文言とも未検証。
+appId: com.nobishiro.app
+---
+- launchApp:
+    clearState: true
+    permissions:
+      photos: "unset"
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-next"
+- tapOn:
+    id: "onboarding-age-yes"
+- tapOn:
+    id: "home-cta-photo"
+- tapOn:
+    text: "すべての写真へのアクセスを許可"
+    optional: true
+- tapOn:
+    text: "Allow Access to All Photos"
+    optional: true
+- assertVisible:
+    id: "photo-select-pick-button"

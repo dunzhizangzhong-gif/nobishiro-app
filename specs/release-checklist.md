@@ -161,14 +161,26 @@ maestro studio
    写真・会話内容を含まないことを確認
 
 **Sentry(AC-017)**
+
+**訂正(2026-08-11、実際のEAS Buildで判明)**: 当初「`app.json`のorganization/project未設定は警告のみで
+ビルド自体は成功する」と記載していたが誤りだった。`npx expo export`(バンドル生成のみ)では警告に留まるが、
+**実際のEAS Build(Xcode/fastlaneのネイティブビルドフェーズ)では、`@sentry/react-native`の設定プラグインが
+組み込む`sentry-cli`のソースマップ自動アップロードが`An organization ID or slug is required`でハード失敗し、
+ビルド自体が失敗する**。DSNが未発行の間はこのアップロード自体が不要なため、`eas.json`の各build
+プロファイルに`SENTRY_DISABLE_AUTO_UPLOAD: "true"`を設定してアップロードをスキップする対応を入れた
+(sentry-cliのエラーメッセージ自身が案内する回避策)。Sentryプロジェクトを作成しorganization/DSNを
+設定したら、この環境変数は削除し、正しいソースマップアップロードを有効化すること。
+
 1. Sentryでプロジェクトを作成(Platform: React Native)、DSNを取得
 2. EAS Secretsに`EXPO_PUBLIC_SENTRY_DSN`を登録
-3. (任意)`app.json`の`@sentry/react-native`プラグイン設定にorganization/projectを追記すると、
-   ビルド時の「Missing config for organization, project」警告が解消される
-4. 実機ビルドでテスト用の例外を1件発生させる(恒久的なデバッグボタンはコードに残さない方針のため、
+3. `app.json`の`@sentry/react-native`プラグイン設定にorganization/projectを追記する(ビルド時の
+   「Missing config for organization, project」警告の解消に加え、ソースマップの正しいアップロードにも必要)
+4. `eas.json`の各build プロファイルから`SENTRY_DISABLE_AUTO_UPLOAD: "true"`を削除する
+   (3を先に済ませてから削除しないと、再びビルド失敗に戻る)
+5. 実機ビルドでテスト用の例外を1件発生させる(恒久的なデバッグボタンはコードに残さない方針のため、
    ローカルで一時的に任意の画面へ`throw`または`Sentry.captureException(new Error('test'))`相当を
    仕込んで実行→確認後にrevertする、が簡便)
-5. Sentryダッシュボードにイベントが1件記録されることを確認(AC-017の手動確認項目)
+6. Sentryダッシュボードにイベントが1件記録されることを確認(AC-017の手動確認項目)
 
 ## 6-1. 事前準備(仕様書確定後すぐ着手可)
 - [ ] プライバシーポリシーの作成・掲載先URL確定(ストア側とアプリ内UIの両方)。STEP4実装(T14)では`EXPO_PUBLIC_PRIVACY_POLICY_URL`・`EXPO_PUBLIC_TERMS_URL`が未設定のため、設定画面(S-11)のプライバシーポリシー・利用規約の行は「準備中」表示で無効化されている。URL確定後、上記環境変数に設定する
@@ -189,9 +201,12 @@ maestro studio
 - [ ] Sentryプロジェクトの作成・DSN発行(STEP4実装(T15)時点ではDSN未発行のため、コード側は
   `EXPO_PUBLIC_SENTRY_DSN`未設定時に初期化をスキップする設計で進めた)。発行後`EXPO_PUBLIC_SENTRY_DSN`を
   `.env`/EAS Secretsに設定し、AC-017の手動確認(テスト用捕捉例外がダッシュボードに記録されること)を実施する。
-  あわせて`app.json`の`@sentry/react-native`プラグイン設定にorganization/projectを追加すると、
-  ビルド時の「Missing config for organization, project」警告が解消される(現状は環境変数フォールバックで
-  ビルド自体は成功する)
+  あわせて`app.json`の`@sentry/react-native`プラグイン設定にorganization/projectを追加し、
+  `eas.json`の各buildプロファイルから`SENTRY_DISABLE_AUTO_UPLOAD: "true"`を削除する。
+  **この2つは組で行うこと**: 2026-08-11の実EAS Buildで、organization/project未設定のまま
+  `SENTRY_DISABLE_AUTO_UPLOAD`だけを外すと、ソースマップ自動アップロード(`sentry-cli`)が
+  `An organization ID or slug is required`でハード失敗しビルド自体が失敗することを確認済み
+  (詳細はT17セクション0-3参照)
 
 ## 6-2. オリジナリティ・コンプライアンス
 - [ ] AC-003/AC-004の禁止パターンリスト(src/lib/textFilter/forbiddenPatterns.ts)の人間レビュー。STEP4実装時点では一次案(spec.md AC-004補足で「別紙で定義」とされていたが未提供だったため実装側で作成)。他社名の網羅性・体型/体重関連語の過不足を確認する

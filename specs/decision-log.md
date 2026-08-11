@@ -236,3 +236,34 @@
 - 影響範囲: .maestro/photo-permission-denied.yaml(新規)、.maestro/photo-permission-first-request.yaml
   (新規)、.maestro/photo-select-validation.yaml(参照コメント更新)、release-checklist.md T17
   (Maestro flow本数を12→14に更新、フェーズ2の記述を「対応済み」に更新)。
+
+## DL-017: eas.jsonの`npm ci`失敗(react-dom peer依存)とSentryソースマップアップロード失敗の修正
+
+- 日付: 2026-08-11(実際のEAS Build実行〔ビルドID f98d1cff-ce9c-4e0c-8811-d07962730163、
+  ac09205b-687b-4ac7-90d7-50cc138ac797〕で発見。人間が承認)
+- ステータス: **承認済み**
+- 論点1(Install dependenciesフェーズ失敗): `package.json`は`react@19.2.3`を直接指定するが、
+  `react-dom`はどこにも直接指定されておらず`@expo/cli`経由で最新版(`19.2.8`、`react@^19.2.8`要求)に
+  解決され、直接指定の`react`と衝突していた。ローカルではこれまで`npm install --legacy-peer-deps`で
+  この衝突を無視していたが、そのフラグは`package.json`/`.npmrc`のどこにも記録されておらず、EAS Build
+  (`--legacy-peer-deps`無しの素の`npm ci`)側には伝わらず、Install dependenciesフェーズがERESOLVEで
+  必ず失敗する状態だった。
+- 決定1: `react-dom`を`package.json`の`devDependencies`に`react`と同じ`19.2.3`で明示的に固定した。
+  スクラッチ環境で`npm ci`が正常終了することを確認済み。新規ライブラリの追加ではなく、既に間接的に
+  引き込まれていたpeer依存のバージョン整合の修正([[DL-013]]に近い性質の対応)。
+- 論点2(Sentryソースマップアップロード失敗): 論点1の修正後、EAS Buildは「Install dependencies」
+  フェーズを通過し、後段の「Run fastlane」(Xcodeネイティブビルド)フェーズで別の理由により失敗した。
+  `@sentry/react-native`のExpo設定プラグインが組み込む`sentry-cli`のソースマップ自動アップロードが
+  `An organization ID or slug is required(provide with --org)`で失敗していた。release-checklist.mdには
+  当初「`app.json`にorganization/project未設定でも警告のみでビルド自体は成功する」と記載していたが、
+  これは`npx expo export`(バンドル生成のみ)で確認した内容に基づく誤りだった。実際のEAS Build
+  (Xcode/fastlaneのネイティブビルドフェーズ)ではハード失敗することが今回判明した。
+- 決定2: `EXPO_PUBLIC_SENTRY_DSN`が未発行の間はソースマップのアップロード自体が不要なため、
+  `eas.json`の各buildプロファイル(development/preview/production)に
+  `"env": {"SENTRY_DISABLE_AUTO_UPLOAD": "true"}`を設定し、アップロードをスキップするようにした
+  (sentry-cliのエラーメッセージ自身が案内する回避策)。Sentryプロジェクト作成・DSN発行・
+  `app.json`へのorganization/project追記が完了したら、この環境変数を削除しソースマップの
+  正しいアップロードを有効化すること(release-checklist.md T17セクション0-3に手順を追記済み)。
+- 影響範囲: package.json(react-dom追加)、package-lock.json、eas.json(env追加)、
+  release-checklist.md(T17 0-3のSentry手順・6-1のSentry項目を訂正)。両修正とも、修正後に実際の
+  `eas build --platform ios`で再検証する。
